@@ -1,23 +1,44 @@
 export default async function handler(req, res) {
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDqkSFvg7n7dxRkSk3w0x842bSW3aoODvTVlLoCyM4AJYFOhCmiOpG6ILv6uBlL-kgHg/exec";
+  const APPS_SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbxDqkSFvg7n7dxRkSk3w0x842bSW3aoODvTVlLoCyM4AJYFOhCmiOpG6ILv6uBlL-kgHg/exec";
+
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   try {
-    const response = await fetch(APPS_SCRIPT_URL, {
-      method: req.method,
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: req.method === "POST" ? JSON.stringify(req.body) : undefined
-    });
+    let url = APPS_SCRIPT_URL;
 
-    const data = await response.text();
+    // Reenviar query params en GET (?action=me&token=...)
+    if (req.method === "GET") {
+      const qs = new URLSearchParams(req.query || {}).toString();
+      if (qs) url += (url.includes("?") ? "&" : "?") + qs;
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      const r = await fetch(url, { method: "GET" });
+      const text = await r.text();
+      return res.status(200).send(text);
+    }
 
-    res.status(200).send(data);
+    // POST: reenviar body JSON
+    if (req.method === "POST") {
+      const r = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req.body ?? {}),
+      });
 
-  } catch (error) {
-    res.status(500).json({ ok: false, error: "Proxy error", details: String(error) });
+      const text = await r.text();
+      return res.status(200).send(text);
+    }
+
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: String(e) });
   }
 }
