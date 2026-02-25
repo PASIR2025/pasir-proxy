@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   const APPS_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbyYWb3FUPranRNHolu2JcxWjE7FmibCelZU8DPfJxGAY0BE_Inq8dZ978K4FQ-PYh7c/exec";
+    "https://script.google.com/macros/s/AKfycbxDqkSFvg7n7dxRkSk3w0x842bSW3aoODvTVlLoCyM4AJYFOhCmiOpG6ILv6uBlL-kgHg/exec";
 
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
